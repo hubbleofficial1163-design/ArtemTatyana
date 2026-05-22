@@ -2023,3 +2023,96 @@ align-items: center;
         font-size: 0.8rem;
     }
 }
+
+/* Стили для разделителя "или" между блоками */
+.wishes-or {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.wishes-or-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #d4b89c, transparent);
+}
+
+.wishes-or-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: #b89474;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0 10px;
+}
+
+/* Адаптивность для мобильных */
+@media screen and (max-width: 480px) {
+    .wishes-or-text {
+        font-size: 1rem;
+    }
+    
+    .wishes-or {
+        gap: 10px;
+        margin: 5px 0;
+    }
+}
+
+
+/* Таймер в одну строку на мобильных устройствах */
+@media screen and (max-width: 768px) {
+    .timer {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 12px;
+    }
+    
+    .time-unit {
+        flex: 1;
+        min-width: 0;
+        padding: 0 5px;
+    }
+    
+    .time-unit span {
+        font-size: 2rem;
+        font-weight: 500;
+    }
+    
+    .time-unit small {
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .timer {
+        gap: 8px;
+    }
+    
+    .time-unit span {
+        font-size: 1.7rem;
+    }
+    
+    .time-unit small {
+        font-size: 0.75rem;
+    }
+}
+
+@media screen and (max-width: 380px) {
+    .timer {
+        gap: 5px;
+    }
+    
+    .time-unit span {
+        font-size: 1.4rem;
+    }
+    
+    .time-unit small {
+        font-size: 0.7rem;
+    }
+}
