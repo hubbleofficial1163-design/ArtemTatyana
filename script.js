@@ -1,13 +1,13 @@
 // ==============================================
-// СВАДЕБНЫЙ САЙТ - ФРОНТЕНД
-// Мария & Алексей | 15.09.2024
+// СВАДЕБНЫЙ САЙТ - АРТЁМ & ТАТЬЯНА
+// С интеграцией Google Sheets
 // ==============================================
 
 // Конфигурация
 const CONFIG = {
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbw3mQQ9vOq-hQY__dD84Kemg4VBCmgtQOrby87ZRVX2S7Du7OzEMUccZ5moxJC7wHipGQ/exec', // ЗАМЕНИТЕ НА ВАШ URL
-    TELEGRAM_CHAT_URL: 'https://max.ru/join/DClxg-eCcMrT7Nb3d15o9msX3lURma_dBszQm-CEKcE', // ЗАМЕНИТЕ НА ВАШУ ССЫЛКУ НА ЧАТ
-    WEDDING_DATE: '2026-07-09T15:25:00' // Дата свадьбы
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzpL2Kou8xucA5lr9TQgZI8umYPrdUKfNRxy_dljR3ErXB6GXrmPiVIyRJ4wKzAeILL/exec', // ЗАМЕНИТЕ НА ВАШ URL
+    TELEGRAM_CHAT_URL: 'https://max.ru/join/DClxg-eCcMrT7Nb3d15o9msX3lURma_dBszQm-CEKcE',
+    WEDDING_DATE: '2026-07-09T15:25:00'
 };
 
 // Прелоадер
@@ -18,8 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
         loader.style.visibility = 'hidden';
     }, 800);
     
-    // Инициализация
     initTelegramLink();
+    initMusic();
+    initGallery();
 });
 
 // Таймер обратного отсчета
@@ -47,40 +48,10 @@ function updateCountdown() {
     document.getElementById('seconds').innerText = seconds.toString().padStart(2, '0');
 }
 
-// Запускаем таймер
 updateCountdown();
 setInterval(updateCountdown, 1000);
 
-// Управление количеством гостей
-const guestsInput = document.getElementById('guests');
-const minusBtn = document.querySelector('.minus-btn');
-const plusBtn = document.querySelector('.plus-btn');
-
-if (minusBtn && plusBtn) {
-    minusBtn.addEventListener('click', function() {
-        let currentValue = parseInt(guestsInput.value);
-        if (currentValue > 1) {
-            guestsInput.value = currentValue - 1;
-            if (navigator.vibrate) navigator.vibrate(30);
-        }
-    });
-    
-    plusBtn.addEventListener('click', function() {
-        let currentValue = parseInt(guestsInput.value);
-        if (currentValue < 10) {
-            guestsInput.value = currentValue + 1;
-            if (navigator.vibrate) navigator.vibrate(30);
-        }
-    });
-    
-    guestsInput.addEventListener('change', function() {
-        let value = parseInt(this.value);
-        if (value < 1) this.value = 1;
-        if (value > 10) this.value = 10;
-    });
-}
-
-// Настройка ссылки на Telegram чат
+// Настройка ссылки на чат
 function initTelegramLink() {
     const chatLink = document.querySelector('.chat-link');
     if (chatLink && CONFIG.TELEGRAM_CHAT_URL) {
@@ -90,159 +61,260 @@ function initTelegramLink() {
     }
 }
 
+// ========== БАЗОВЫЕ СТИЛИ АНИМАЦИЙ ==========
+const coreStyles = document.createElement('style');
+coreStyles.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(coreStyles);
+
+// ========== УНИВЕРСАЛЬНОЕ МОДАЛЬНОЕ ОКНО ==========
+function showModal(title, message, isError = false) {
+    const existingModal = document.getElementById('customModal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'customModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+    `;
+
+    const icon = isError ? '✕' : '✓';
+    const iconColor = isError ? '#c62828' : '#2e7d32';
+    const bgIconColor = isError ? '#ffebee' : '#e8f5e9';
+    const borderColor = isError ? '#c62828' : '#2e7d32';
+
+    modal.innerHTML = `
+        <div style="
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 32px 40px;
+            max-width: 380px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.3s ease;
+            border-top: 3px solid ${borderColor};
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        ">
+            <div style="
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: ${bgIconColor};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px auto;
+            ">
+                <div style="
+                    font-size: 32px;
+                    font-weight: 400;
+                    color: ${iconColor};
+                    line-height: 1;
+                ">${icon}</div>
+            </div>
+            <h3 style="
+                font-size: 24px;
+                font-weight: 500;
+                color: #1a1a1a;
+                margin-bottom: 12px;
+                letter-spacing: -0.3px;
+            ">${title}</h3>
+            <p style="
+                font-size: 16px;
+                color: #555555;
+                margin-bottom: 28px;
+                line-height: 1.5;
+            ">${message}</p>
+            <button onclick="this.closest('#customModal').remove()" style="
+                background: #f5f5f5;
+                color: #333333;
+                border: none;
+                padding: 12px 32px;
+                border-radius: 40px;
+                font-family: inherit;
+                font-size: 15px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            " onmouseover="this.style.background='#e8e8e8'" onmouseout="this.style.background='#f5f5f5'">
+                Закрыть
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    if (!isError) setTimeout(() => { if (modal.parentElement) modal.remove(); }, 4000);
+}
+
+// ========== МОДАЛЬНОЕ ОКНО ЗАГРУЗКИ ==========
+function showLoadingModal() {
+    const existingLoading = document.getElementById('loadingModal');
+    if (existingLoading) existingLoading.remove();
+    
+    const loadingModal = document.createElement('div');
+    loadingModal.id = 'loadingModal';
+    loadingModal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(3px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    `;
+    loadingModal.innerHTML = `
+        <div style="
+            background: white;
+            border-radius: 16px;
+            padding: 32px 40px;
+            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        ">
+            <div style="
+                width: 50px;
+                height: 50px;
+                border: 3px solid #e0e0e0;
+                border-top-color: #d4b89c;
+                border-radius: 50%;
+                margin: 0 auto 20px;
+                animation: spin 1s linear infinite;
+            "></div>
+            <p style="
+                font-size: 15px;
+                color: #666;
+                margin: 0;
+            ">Отправка ответа...</p>
+        </div>
+    `;
+    document.body.appendChild(loadingModal);
+    return loadingModal;
+}
+
+// ========== GOOGLE SHEETS ==========
+class GoogleSheetsSender {
+    constructor() {
+        this.scriptUrl = CONFIG.APPS_SCRIPT_URL;
+    }
+
+    async sendFormData(formData) {
+        const formBody = new URLSearchParams();
+        Object.keys(formData).forEach(key => {
+            formBody.append(key, formData[key]);
+        });
+
+        const response = await fetch(this.scriptUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formBody.toString()
+        });
+        
+        const result = await response.json();
+        return result;
+    }
+}
+
+const sheetsSender = new GoogleSheetsSender();
+
 // Обработка формы RSVP
 const rsvpForm = document.getElementById('rsvp-form');
 if (rsvpForm) {
     rsvpForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        const submitBtn = document.querySelector('.submit-btn');
+        const originalContent = submitBtn.innerHTML;
+        
         // Валидация
         const attendanceSelected = document.querySelector('input[name="attendance"]:checked');
         if (!attendanceSelected) {
-            showError('Пожалуйста, выберите, сможете ли вы прийти');
+            showModal('Ошибка', 'Пожалуйста, выберите, сможете ли вы прийти', true);
             return;
         }
         
         const name = document.getElementById('name').value.trim();
-        const contact = document.getElementById('contact').value.trim();
+        const message = document.getElementById('message').value.trim();
         
         if (!name) {
-            showError('Пожалуйста, введите ваше имя');
+            showModal('Ошибка', 'Пожалуйста, введите ваше имя', true);
             document.getElementById('name').focus();
             return;
         }
         
-        if (!contact) {
-            showError('Пожалуйста, введите email или телефон для связи');
-            document.getElementById('contact').focus();
-            return;
+        // Показываем загрузку
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Отправка...</span>';
+        submitBtn.disabled = true;
+        
+        const loadingModal = showLoadingModal();
+        
+        try {
+            const formData = {
+                name: name,
+                attendance: attendanceSelected.value,
+                message: message
+            };
+            
+            const result = await sheetsSender.sendFormData(formData);
+            
+            loadingModal.remove();
+            
+            if (result.result === 'success') {
+                const successMessage = document.getElementById('success-message');
+                const form = document.getElementById('rsvp-form');
+                const successTitle = successMessage.querySelector('h3');
+                
+                successTitle.textContent = `Спасибо, ${name}!`;
+                
+                form.style.display = 'none';
+                successMessage.style.display = 'block';
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+            } else {
+                throw new Error(result.message || 'Ошибка отправки');
+            }
+        } catch (error) {
+            loadingModal.remove();
+            showModal('Ошибка', error.message || 'Произошла ошибка при отправке. Пожалуйста, попробуйте ещё раз.', true);
+        } finally {
+            submitBtn.innerHTML = originalContent;
+            submitBtn.disabled = false;
         }
-        
-        // Подготовка данных
-        const formData = {
-            name: name,
-            contact: contact,
-            attendance: attendanceSelected.value,
-            guests: document.getElementById('guests').value,
-            message: document.getElementById('message').value.trim() || ''
-        };
-        
-        // Отправка
-        await submitRSVP(formData);
     });
-}
-
-// Функция отправки данных
-async function submitRSVP(formData) {
-    const submitBtn = document.querySelector('.submit-btn');
-    const originalContent = submitBtn.innerHTML;
-    
-    // Показываем индикатор загрузки
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Отправка...</span>';
-    submitBtn.disabled = true;
-    
-    try {
-        // Создаем FormData для отправки
-        const data = new URLSearchParams();
-        data.append('name', formData.name);
-        data.append('contact', formData.contact);
-        data.append('attendance', formData.attendance);
-        data.append('guests', formData.guests);
-        data.append('message', formData.message);
-        
-        // Отправляем запрос
-        const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
-            method: 'POST',
-            body: data,
-            mode: 'no-cors'
-        });
-        
-        // Успешная отправка
-        showSuccess(formData.name);
-        
-    } catch (error) {
-        console.error('Ошибка отправки:', error);
-        showSuccess(formData.name); // Показываем успех даже при ошибке (fallback)
-    } finally {
-        // Восстанавливаем кнопку
-        submitBtn.innerHTML = originalContent;
-        submitBtn.disabled = false;
-    }
-}
-
-// Показать сообщение об успехе
-function showSuccess(guestName) {
-    const form = document.getElementById('rsvp-form');
-    const successMessage = document.getElementById('success-message');
-    
-    // Персонализируем сообщение
-    const successTitle = successMessage.querySelector('h3');
-    const successText = successMessage.querySelector('p');
-    
-    successTitle.textContent = `Спасибо, ${guestName}!`;
-    successText.textContent = 'Ваш ответ успешно отправлен! Мы будем с нетерпением ждать встречи на нашей свадьбе.';
-    
-    // Показываем/скрываем
-    form.style.display = 'none';
-    successMessage.style.display = 'block';
-    
-    // Прокручиваем к сообщению
-    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    // Скрываем клавиатуру
-    document.activeElement.blur();
-    
-    // Вибрация
-    if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-}
-
-// Показать ошибку
-function showError(message) {
-    // Создаем элемент ошибки
-    let errorDiv = document.querySelector('.form-error');
-    
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.className = 'form-error';
-        errorDiv.style.cssText = `
-            background: #fff5f5;
-            border: 1px solid #feb2b2;
-            color: #c53030;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin: 15px 0;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: fadeIn 0.3s ease;
-        `;
-        
-        const formHeader = document.querySelector('.form-header');
-        if (formHeader) {
-            formHeader.parentNode.insertBefore(errorDiv, formHeader.nextSibling);
-        } else {
-            rsvpForm.insertBefore(errorDiv, rsvpForm.firstChild);
-        }
-    }
-    
-    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-    
-    // Автоудаление через 5 секунд
-    setTimeout(() => {
-        if (errorDiv && errorDiv.parentNode) {
-            errorDiv.style.opacity = '0';
-            errorDiv.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                if (errorDiv.parentNode) {
-                    errorDiv.parentNode.removeChild(errorDiv);
-                }
-            }, 300);
-        }
-    }, 5000);
-    
-    // Вибрация
-    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 }
 
 // Кнопка "Заполнить ещё один ответ"
@@ -251,24 +323,21 @@ if (newResponseBtn) {
     newResponseBtn.addEventListener('click', function() {
         const form = document.getElementById('rsvp-form');
         const successMessage = document.getElementById('success-message');
+        const nameInput = document.getElementById('name');
+        const messageTextarea = document.getElementById('message');
         
-        // Сбрасываем форму
         form.reset();
-        guestsInput.value = 1;
+        if (nameInput) nameInput.value = '';
+        if (messageTextarea) messageTextarea.value = '';
         
-        // Удаляем сообщения об ошибках
         const errors = document.querySelectorAll('.form-error');
         errors.forEach(error => error.remove());
         
-        // Показываем форму
         successMessage.style.display = 'none';
         form.style.display = 'block';
-        
-        // Прокручиваем к форме
         form.scrollIntoView({ behavior: 'smooth' });
         
-        // Фокус на первое поле
-        document.getElementById('name').focus();
+        if (nameInput) nameInput.focus();
     });
 }
 
@@ -296,7 +365,6 @@ function animateOnScroll() {
     
     elements.forEach(element => {
         const elementTop = element.getBoundingClientRect().top;
-        
         if (elementTop < windowHeight - 100) {
             element.style.opacity = '1';
             element.style.transform = 'translateY(0)';
@@ -342,30 +410,9 @@ document.querySelectorAll('.icon-circle').forEach(icon => {
     });
 });
 
-// Добавляем CSS для анимаций
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fa-spinner {
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-`;
-document.head.appendChild(style);
-
-
 // ==============================================
 // ГАЛЕРЕЯ С ГОРИЗОНТАЛЬНЫМ СВАЙПОМ
 // ==============================================
-
 function initGallery() {
     const track = document.getElementById('galleryTrack');
     const slides = document.querySelectorAll('.gallery-slide');
@@ -377,25 +424,18 @@ function initGallery() {
     
     let currentIndex = 0;
     let startX = 0;
-    let currentX = 0;
     let isDragging = false;
-    let startTime = 0;
-    let isSwiping = false;
-    const slideWidth = 100; // проценты
-    let trackWidth = track.offsetWidth;
+    let scrollLeft = 0;
     
-    // Обновление позиции слайдера
     function updateSlider() {
         const translateX = -(currentIndex * 100);
         track.style.transform = `translateX(${translateX}%)`;
         
-        // Обновляем dots
         dots.forEach((dot, index) => {
             dot.classList.toggle('active', index === currentIndex);
         });
     }
     
-    // Следующий слайд
     function nextSlide() {
         if (currentIndex < slides.length - 1) {
             currentIndex++;
@@ -404,7 +444,6 @@ function initGallery() {
         }
     }
     
-    // Предыдущий слайд
     function prevSlide() {
         if (currentIndex > 0) {
             currentIndex--;
@@ -413,7 +452,6 @@ function initGallery() {
         }
     }
     
-    // Переход к конкретному слайду
     function goToSlide(index) {
         if (index >= 0 && index < slides.length) {
             currentIndex = index;
@@ -421,212 +459,56 @@ function initGallery() {
         }
     }
     
-    // Обработчики кнопок
-    if (prevBtn) {
-        prevBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            prevSlide();
-        });
-    }
+    if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); prevSlide(); });
+    if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); nextSlide(); });
     
-    if (nextBtn) {
-        nextBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            nextSlide();
-        });
-    }
-    
-    // Обработчики dots
     dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
-            goToSlide(index);
-        });
+        dot.addEventListener('click', () => goToSlide(index));
     });
     
     // Touch события для свайпа
-    function handleTouchStart(e) {
+    track.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
-        startTime = Date.now();
         isDragging = true;
-        isSwiping = false;
         track.style.transition = 'none';
-        currentX = -(currentIndex * track.offsetWidth);
-        
-        // Предотвращаем скролл при свайпе по галерее
-        track.addEventListener('touchmove', handleTouchMove, { passive: false });
-        track.addEventListener('touchend', handleTouchEnd);
-    }
+    }, { passive: true });
     
-    function handleTouchMove(e) {
+    track.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
-        
         const deltaX = e.touches[0].clientX - startX;
-        const newTranslateX = currentX + deltaX;
-        
-        // Добавляем сопротивление на краях
-        let limitedTranslate = newTranslateX;
-        const minTranslate = 0;
-        const maxTranslate = -(slides.length - 1) * track.offsetWidth;
-        
-        if (newTranslateX > minTranslate) {
-            limitedTranslate = minTranslate + (newTranslateX - minTranslate) * 0.3;
-        } else if (newTranslateX < maxTranslate) {
-            limitedTranslate = maxTranslate + (newTranslateX - maxTranslate) * 0.3;
-        }
-        
-        track.style.transform = `translateX(${limitedTranslate}px)`;
-        isSwiping = true;
-        
-        // Предотвращаем скролл страницы при горизонтальном свайпе
-        if (Math.abs(deltaX) > 10) {
-            e.preventDefault();
-        }
-    }
+        if (Math.abs(deltaX) > 10) e.preventDefault();
+    }, { passive: false });
     
-    function handleTouchEnd(e) {
+    track.addEventListener('touchend', (e) => {
         if (!isDragging) return;
-        
-        track.removeEventListener('touchmove', handleTouchMove);
-        track.removeEventListener('touchend', handleTouchEnd);
-        
         const deltaX = e.changedTouches[0].clientX - startX;
-        const deltaTime = Date.now() - startTime;
-        const velocity = Math.abs(deltaX) / deltaTime;
-        
         track.style.transition = 'transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
         
-        const swipeThreshold = 50;
-        const velocityThreshold = 0.3;
-        
-        if (Math.abs(deltaX) > swipeThreshold || velocity > velocityThreshold) {
-            if (deltaX > 0 && currentIndex > 0) {
-                // Свайп вправо
-                currentIndex--;
-                updateSlider();
-                if (navigator.vibrate) navigator.vibrate(20);
-            } else if (deltaX < 0 && currentIndex < slides.length - 1) {
-                // Свайп влево
-                currentIndex++;
-                updateSlider();
-                if (navigator.vibrate) navigator.vibrate(20);
-            } else {
-                updateSlider();
-            }
+        if (Math.abs(deltaX) > 50) {
+            if (deltaX > 0 && currentIndex > 0) prevSlide();
+            else if (deltaX < 0 && currentIndex < slides.length - 1) nextSlide();
+            else updateSlider();
         } else {
             updateSlider();
         }
-        
         isDragging = false;
-        isSwiping = false;
-    }
-    
-    // Mouse события для десктопа
-    let mouseStartX = 0;
-    let mouseCurrentX = 0;
-    let isMouseDragging = false;
-    
-    function handleMouseDown(e) {
-        e.preventDefault();
-        mouseStartX = e.clientX;
-        isMouseDragging = true;
-        track.style.transition = 'none';
-        currentX = -(currentIndex * track.offsetWidth);
-        
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-    }
-    
-    function handleMouseMove(e) {
-        if (!isMouseDragging) return;
-        
-        const deltaX = e.clientX - mouseStartX;
-        const newTranslateX = currentX + deltaX;
-        
-        let limitedTranslate = newTranslateX;
-        const minTranslate = 0;
-        const maxTranslate = -(slides.length - 1) * track.offsetWidth;
-        
-        if (newTranslateX > minTranslate) {
-            limitedTranslate = minTranslate + (newTranslateX - minTranslate) * 0.3;
-        } else if (newTranslateX < maxTranslate) {
-            limitedTranslate = maxTranslate + (newTranslateX - maxTranslate) * 0.3;
-        }
-        
-        track.style.transform = `translateX(${limitedTranslate}px)`;
-    }
-    
-    function handleMouseUp(e) {
-        if (!isMouseDragging) return;
-        
-        const deltaX = e.clientX - mouseStartX;
-        track.style.transition = 'transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
-        
-        const swipeThreshold = 50;
-        
-        if (Math.abs(deltaX) > swipeThreshold) {
-            if (deltaX > 0 && currentIndex > 0) {
-                currentIndex--;
-                updateSlider();
-                if (navigator.vibrate) navigator.vibrate(20);
-            } else if (deltaX < 0 && currentIndex < slides.length - 1) {
-                currentIndex++;
-                updateSlider();
-                if (navigator.vibrate) navigator.vibrate(20);
-            } else {
-                updateSlider();
-            }
-        } else {
-            updateSlider();
-        }
-        
-        isMouseDragging = false;
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-    }
-    
-    // Добавляем обработчики
-    track.addEventListener('touchstart', handleTouchStart, { passive: false });
-    track.addEventListener('mousedown', handleMouseDown);
-    
-    // Обновляем размеры при ресайзе
-    window.addEventListener('resize', () => {
-        updateSlider();
     });
     
-    // Инициализация
     updateSlider();
 }
-
-// Запускаем галерею после загрузки DOM
-document.addEventListener('DOMContentLoaded', function() {
-    initGallery();
-});
-
 
 // ==============================================
 // МУЗЫКА НА САЙТЕ
 // ==============================================
-
 function initMusic() {
     const musicBtn = document.getElementById('musicBtn');
-    
-    // Создаём аудио элемент
     const audio = new Audio();
-    
-    // Укажите URL вашего аудиофайла (можно использовать несколько форматов для кроссбраузерности)
-    // Вариант 1: загрузите файл в папку с сайтом
-    audio.src = 'music.mp3'; // замените на ваш файл
-    
-    // Вариант 2: используйте ссылку на внешний файл (например, из Google Drive, SoundCloud и т.д.)
-    // audio.src = 'https://example.com/music.mp3';
-    
-    // Настройки аудио
-    audio.loop = true; // зациклить трек
-    audio.volume = 0.5; // громкость 0.5 (от 0 до 1)
+    audio.src = 'music.mp3';
+    audio.loop = true;
+    audio.volume = 0.5;
     
     let isPlaying = false;
     
-    // Функция воспроизведения (нужен пользовательский клик)
     async function playMusic() {
         try {
             await audio.play();
@@ -634,14 +516,11 @@ function initMusic() {
             musicBtn.classList.add('playing');
             musicBtn.innerHTML = '<i class="fas fa-music"></i><span class="music-text">Музыка играет</span>';
         } catch (error) {
-            console.log('Автовоспроизведение заблокировано браузером');
+            console.log('Автовоспроизведение заблокировано');
             isPlaying = false;
-            musicBtn.classList.remove('playing');
-            musicBtn.innerHTML = '<i class="fas fa-music"></i><span class="music-text">Включить музыку</span>';
         }
     }
     
-    // Функция паузы
     function pauseMusic() {
         audio.pause();
         isPlaying = false;
@@ -649,39 +528,15 @@ function initMusic() {
         musicBtn.innerHTML = '<i class="fas fa-music"></i><span class="music-text">Включить музыку</span>';
     }
     
-    // Обработчик кнопки
     musicBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        
-        if (!isPlaying) {
-            playMusic();
-        } else {
-            pauseMusic();
-        }
-        
-        // Вибрация
+        if (!isPlaying) playMusic();
+        else pauseMusic();
         if (navigator.vibrate) navigator.vibrate(50);
     });
     
-    // Опционально: плавно уменьшаем громкость перед уходом со страницы
-    window.addEventListener('beforeunload', function() {
-        if (audio) {
-            audio.volume = 0;
-        }
-    });
-    
-    // Опционально: остановить музыку при уходе с вкладки
     document.addEventListener('visibilitychange', function() {
-        if (document.hidden && isPlaying) {
-            audio.pause();
-        } else if (!document.hidden && isPlaying) {
-            audio.play().catch(e => console.log('Не удалось возобновить'));
-        }
+        if (document.hidden && isPlaying) audio.pause();
+        else if (!document.hidden && isPlaying) audio.play().catch(e => console.log('Не удалось возобновить'));
     });
 }
-
-// Запускаем после загрузки DOM
-document.addEventListener('DOMContentLoaded', function() {
-    // ... ваш существующий код ...
-    initMusic(); // добавить эту строку
-});
